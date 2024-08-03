@@ -7,14 +7,14 @@ class agent_generic():
     #evulate starting position
     game_state = game.enter_room(current_position)
 
-    while(game_state not -1 or -2):
+    # while(game_state not -1 or -2):
+    #     tracking(game_state)
+    #     mode, target = evaluate(game_state)
+    #         if -1
+    #             lost
+    #         get warning
         
-        mode, target = evaluate(game_state)
-            if -1
-                lost
-            get warning
-        
-        game_state = game.agent_input(mode, target)
+    #     game_state = game.agent_input(mode, target)
             
     
 class agent_astar(agent_generic):
