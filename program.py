@@ -12,10 +12,14 @@ Bats Encountered
 if __name__ == '__main__':                        
     # TODO: In the original game you can replay a dungeon (same positions of you and the threats)
 
-    WG = WumpusGame(cave='square')
-    WG.gameloop()
+    WG = WumpusGame.WumpusGame(cave='square')
+    # WG.gameloop()
 
     # TODO:
+
+    agent_dfs = agent.agent_dfs(WG)
+    agent_dfs.run_game()
+
     """
     For Agent in agent.Agent_list:
         WG = WumpusGame(agent = true)

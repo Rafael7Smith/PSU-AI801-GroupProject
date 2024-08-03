@@ -93,6 +93,7 @@ class WumpusGame(object):
             if threat == 'wumpus':
                 self.wumpus_pos = pos
         self.player_pos = random.choice(self.get_safe_rooms())
+        self.player_pos = 25
         return self.player_pos
 
     def is_solvable_search(self, position):
@@ -262,18 +263,18 @@ class WumpusGame(object):
         
         elif self.threats.get(room_number) == 'wumpus':
             print("Wumpus eats you.")
-            room_number = -1
+            return -1, None
 
         elif self.threats.get(room_number) == 'pit':
             print("You fall into a pit.")
-            room_number = -1, None
+            return -1, None
 
         # The room is safe; collect information about adjacent rooms.
         warnings = []
         for i in self.cave[room_number]:
             warnings.append(self.print_warning(self.threats.get(i)))
-            print(warnings)
-
+            
+        print(warnings)
         # Only if nothing else happens, the player enters the room of his choice.
         return room_number, warnings
 
