@@ -93,6 +93,7 @@ class WumpusGame(object):
             if threat == 'wumpus':
                 self.wumpus_pos = pos
         self.player_pos = random.choice(self.get_safe_rooms())
+        return self.player_pos
 
     def is_solvable_search(self, position):
         return self.breadth_first_search(position, self.wumpus_pos, max_depth=-1, solve_check=True)
@@ -154,9 +155,6 @@ class WumpusGame(object):
     INPUT / OUTPUT: The player interacts with the game.
     """
 
-
-
-
     def agent_input(self, mode, target):
         """
         processes input from an AI agent and returns the game state
@@ -174,9 +172,7 @@ class WumpusGame(object):
             game_state = self.shoot_room(target)
         return game_state
     
-    def agent_output(self):
-        return
-    
+
     def get_players_input(self):
         """ Queries input until valid input is given.
         """
@@ -276,6 +272,7 @@ class WumpusGame(object):
         warnings = []
         for i in self.cave[room_number]:
             warnings.append(self.print_warning(self.threats.get(i)))
+            print(warnings)
 
         # Only if nothing else happens, the player enters the room of his choice.
         return room_number, warnings
