@@ -93,7 +93,6 @@ class WumpusGame(object):
             if threat == 'wumpus':
                 self.wumpus_pos = pos
         self.player_pos = random.choice(self.get_safe_rooms())
-        self.player_pos = 25
         return self.player_pos
 
     def is_solvable_search(self, position):
@@ -294,7 +293,7 @@ class WumpusGame(object):
                 return -2, status
             elif threat == 'bat':
                 print("You killed a bat.")
-                status = 'bat'
+                status = 'Missed'
         elif threat in ['pit', None]:
             print("This arrow is lost.")
             status = 'Missed'
@@ -302,11 +301,11 @@ class WumpusGame(object):
         # If this was your last arrow and it did not hit the wumpus...
         if self.arrows < 1:        # This (or the updating of self.arrows) seems to be broken...
             print("Your quiver is empty.")
-            return -1
+            return -1, None
 
         #  If you shoot into another room, the Wumpus has a 75% of chance of waking up and moving into an adjacent room.
         if random.random() < 0.75:
-            #print("DEBUG: Wumpus moved.")
+            print("DEBUG: Wumpus moved.")
             for room_number, threat in self.threats.items():
                 if threat == 'wumpus':
                     wumpus_pos = room_number                    
@@ -315,7 +314,7 @@ class WumpusGame(object):
             self.threats[new_pos] = 'wumpus'            
             if new_pos == self.player_pos: # Wumpus entered players room.
                 print("Wumpus enters your room and eats you!")
-                return -1
+                return -1, None
 
         return self.player_pos, status
 
