@@ -4,6 +4,7 @@ With modifications made necessary for project
 """
 
 import random
+from datetime import datetime
 
 class WumpusGame(object):
 
@@ -87,6 +88,7 @@ class WumpusGame(object):
     def populate_cave(self):
         """ Drop player and threats into random rooms in the cave.
         """
+        self.threats.clear()
         for threat in ['bat', 'bat', 'pit', 'pit', 'wumpus']:
             pos = random.choice(self.get_safe_rooms())
             self.threats[pos] = threat
@@ -137,6 +139,8 @@ class WumpusGame(object):
                 for iter in stack:
                     if self.threats.get(iter) == 'pit':
                         remove_list.append(iter)
+                    if self.threats.get(iter) == 'bat':
+                        remove_list.append(iter)
                 
                 for iter in remove_list:
                     stack.remove(iter)
@@ -144,7 +148,8 @@ class WumpusGame(object):
             visited = visited + stack
             stack = list(set([graph[v][i] for v in stack for i in range(len(graph[v]))]).difference(visited))
             depth += 1
-            if max_depth > 0 and depth > max_depth:            # Target is too far away from the source.
+            if max_depth > 0 and depth > max_depth:
+                print(f'DEBUG: Returning false for search {self.threats}, {depth}, {stack}, {visited}')            # Target is too far away from the source.
                 return False, depth
             else:                            # Visit all successors of vertices in the stack.
                 return search(stack, visited, target, depth)
@@ -245,7 +250,7 @@ class WumpusGame(object):
         """ Controls the process of entering a new room.
         """    
         print("Entering room {}...".format(room_number))
-        # Maybe a threat waits in the new room.    
+        # Maybe a threat waits in the new room.  
         if self.threats.get(room_number) == 'bat':
             # The bat teleports the player to random empty room
             print("You encounter a bat, it transports you to a random empty room.")
@@ -255,25 +260,26 @@ class WumpusGame(object):
             solveable, depth = self.is_solvable_search(new_pos)
             while(not solveable):
                 print(f"DEBUG: New position {new_pos} is not solveable")
+                random.seed(datetime.now().timestamp())
                 new_pos = random.choice(self.get_safe_rooms())
                 solveable, depth = self.is_solvable_search(new_pos)
             
-            return self.enter_room(new_pos)
+            return new_pos, 'CatchBat'
         
         elif self.threats.get(room_number) == 'wumpus':
             print("Wumpus eats you.")
-            return -1, None
+            return -1, 'Eaten'
 
         elif self.threats.get(room_number) == 'pit':
             print("You fall into a pit.")
-            return -1, None
+            return -1, 'Pitfall'
 
         # The room is safe; collect information about adjacent rooms.
         warnings = []
         for i in self.cave[room_number]:
             warnings.append(self.print_warning(self.threats.get(i)))
             
-        print(warnings)
+        # print(warnings)
         # Only if nothing else happens, the player enters the room of his choice.
         return room_number, warnings
 
@@ -293,7 +299,7 @@ class WumpusGame(object):
                 return -2, status
             elif threat == 'bat':
                 print("You killed a bat.")
-                status = 'Missed'
+                status = 'Killbat'
         elif threat in ['pit', None]:
             print("This arrow is lost.")
             status = 'Missed'
@@ -301,32 +307,32 @@ class WumpusGame(object):
         # If this was your last arrow and it did not hit the wumpus...
         if self.arrows < 1:        # This (or the updating of self.arrows) seems to be broken...
             print("Your quiver is empty.")
-            return -1, None
+            return -1, 'Empty quiver'
 
         #  If you shoot into another room, the Wumpus has a 75% of chance of waking up and moving into an adjacent room.
         if random.random() < 0.75:
-            print("DEBUG: Wumpus moved.")
             for room_number, threat in self.threats.items():
                 if threat == 'wumpus':
-                    wumpus_pos = room_number                    
+                    wumpus_pos = room_number     
+            # print(f"DEBUG: Wumpus moved. Old Position: {wumpus_pos}, Threats: {self.threats}")
             new_pos = random.choice(list(set(self.cave[wumpus_pos]).difference(self.threats.keys())))
             del self.threats[room_number]
             self.threats[new_pos] = 'wumpus'            
             if new_pos == self.player_pos: # Wumpus entered players room.
                 print("Wumpus enters your room and eats you!")
-                return -1, None
+                return -1, 'Attacked'
 
         return self.player_pos, status
 
-        
+    def surrender_game(self, room_number):
+           return -1, 'Surrender'
+    
     def gameloop(self):
 
         print("HUNT THE WUMPUS")
         print("===============")
         print()
         self.populate_cave()
-        self.threats[4] = 'pit'
-        self.threats[10] = 'pit'
         # print("DEBUG: Threats are located in the following rooms: {}".format(self.threats))
 
         solveable, depth = self.is_solvable_search(self.player_pos)
@@ -343,7 +349,6 @@ class WumpusGame(object):
 
             print("You are in room {}.".format(self.player_pos), end=" ")
             print("Tunnels lead to:  {}".format(self.cave[self.player_pos]))
-            
             
             inpt = self.get_players_input()        # Player choses move or shoot.
             print()                                # Visual separation of rounds.
