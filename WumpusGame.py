@@ -88,6 +88,7 @@ class WumpusGame(object):
     def populate_cave(self):
         """ Drop player and threats into random rooms in the cave.
         """
+        self.threats.clear()
         for threat in ['bat', 'bat', 'pit', 'pit', 'wumpus']:
             pos = random.choice(self.get_safe_rooms())
             self.threats[pos] = threat
@@ -249,7 +250,7 @@ class WumpusGame(object):
         """ Controls the process of entering a new room.
         """    
         print("Entering room {}...".format(room_number))
-        # Maybe a threat waits in the new room.    
+        # Maybe a threat waits in the new room.  
         if self.threats.get(room_number) == 'bat':
             # The bat teleports the player to random empty room
             print("You encounter a bat, it transports you to a random empty room.")
@@ -278,7 +279,7 @@ class WumpusGame(object):
         for i in self.cave[room_number]:
             warnings.append(self.print_warning(self.threats.get(i)))
             
-        print(warnings)
+        # print(warnings)
         # Only if nothing else happens, the player enters the room of his choice.
         return room_number, warnings
 
@@ -313,7 +314,7 @@ class WumpusGame(object):
             for room_number, threat in self.threats.items():
                 if threat == 'wumpus':
                     wumpus_pos = room_number     
-            print(f"DEBUG: Wumpus moved. Old Position: {wumpus_pos}, Threats: {self.threats}")
+            # print(f"DEBUG: Wumpus moved. Old Position: {wumpus_pos}, Threats: {self.threats}")
             new_pos = random.choice(list(set(self.cave[wumpus_pos]).difference(self.threats.keys())))
             del self.threats[room_number]
             self.threats[new_pos] = 'wumpus'            
@@ -348,7 +349,6 @@ class WumpusGame(object):
 
             print("You are in room {}.".format(self.player_pos), end=" ")
             print("Tunnels lead to:  {}".format(self.cave[self.player_pos]))
-            
             
             inpt = self.get_players_input()        # Player choses move or shoot.
             print()                                # Visual separation of rounds.

@@ -17,30 +17,43 @@ if __name__ == '__main__':
     # WG.gameloop()
 
     # TODO:
-    final_results = pd.DataFrame(columns=['Victory','Cause', 'Turns', 'Explored %', 'Repeats', 'Bats', 'Missed Arrows'])
+    final_results = None
     for iter in range(100):
         WG = WumpusGame.WumpusGame(cave='square')
         agent_dfs = agent.agent_dfs(WG)
         results = agent_dfs.run_game()
-        final_results = pd.concat([final_results, results], ignore_index=True)
+        if(final_results is None):
+            final_results = results
+        else:
+            final_results = pd.concat([final_results, results], ignore_index=True)
+
+    print(f'-----------------------------------------------------------------\n')
+    print(f'-----------------------------------------------------------------\n')
+    print(f'-----------------------------------------------------------------\n')
+
+    Human_final_results = None
+    for iter in range(2):
+        WG = WumpusGame.WumpusGame(cave='square')
+        agent_dfs = agent.human(WG)
+        results = agent_dfs.run_game()
+        if(Human_final_results is None):
+            Human_final_results = results
+        else:
+            Human_final_results = pd.concat([Human_final_results, results], ignore_index=True)
+
+    pd.set_option('display.float_format', lambda x: '%.2f' % x)
+    with pd.option_context('display.max_rows', None,
+                       'display.max_columns', None,
+                       'display.precision', 1,
+                       ):
+        print(final_results)
+    print(final_results.describe(include='all'))
+
+    print(f'\n-----------------------------------------------------------------\n')
 
     with pd.option_context('display.max_rows', None,
                        'display.max_columns', None,
-                       'display.precision', 3,
+                       'display.precision', 1,
                        ):
-        print(final_results)
-    for iter in final_results.columns:
-        print(f'Column: {iter}\n{final_results[iter].describe()}')
-    """
-    For Agent in agent.Agent_list:
-        WG = WumpusGame(agent = true)
-        score = Agent(WG)
-        print(score)
-            score - Dataframe
-            iteration # (run #)     turns   Revisited Rooms bats encountered   Arrows Fired     win
-
-
-        Agent_DFS avg of 32 turns, Avg of 11 revisted rooms, Avg of 0 bats
-        Agnet_Astar avg of 12 turns, win rate 32%
-
-    """
+        print(Human_final_results)
+    print(Human_final_results.describe(include='all'))

@@ -17,22 +17,36 @@ class agent_generic():
         self.bat_count = 0
         self.victory = False
         return
-
+    def evaluate_gamestate(self):
+        return
+    
     def run_game(self):
+        print(f'******************************')
+        print(f'*************NEW GAME*********')
+        print(f'******************************')
         self.current_position = self.game.populate_cave()
+
+        solveable, depth = self.game.is_solvable_search(self.current_position)
+        while(not solveable):
+            if(DEBUG): print(f"DEBUG: Game {self.current_position},{self.game.threats} is not solveable, regenerating")
+            self.current_position = self.game.populate_cave()
+            solveable, depth = self.game.is_solvable_search(self.current_position)
+            
         game_state = self.game.enter_room(self.current_position)
 
         while(True):
-            if(DEBUG): print(f'----New Turn: {self.current_turn}, Game State: {game_state}----')
+            print(f'----New Turn: {self.current_turn}----')
             
             #Score the game
             self.record_score(game_state)
 
             if(game_state[0] == -1):
                 print("AGENT LOST GAME")
+                print(f'******************************')
                 break
             if(game_state[0] == -2):
                 print("AGENT WON GAME")
+                print(f'******************************')
                 break
             
             #update current position
@@ -56,13 +70,13 @@ class agent_generic():
         self.final_score(game_state)
         
         #print(f'Final Score:\n{self.dataframe_score}')
+        self.dataframe_score['Turns'] = self.dataframe_score['Turns'].astype(int)
+        self.dataframe_score['Repeats'] = self.dataframe_score['Repeats'].astype(int)
+        self.dataframe_score['Bats'] = self.dataframe_score['Bats'].astype(int)
+        self.dataframe_score['Missed Arrows'] = self.dataframe_score['Missed Arrows'].astype(int)
         return self.dataframe_score
     
-    def evaluate_gamestate(self):
-        return
-
     def record_score(self, game_state):
-
         if(game_state[0] == -1):
             self.victory = False
         elif(game_state[0] == -2):
@@ -88,6 +102,7 @@ class agent_generic():
         #['Victory','Cause', 'Turns', 'Explored', 'Repeats', 'Bats', 'Missed Arrows']
         df_index = len(self.dataframe_score.index)
         self.dataframe_score.loc[df_index] = [self.victory, game_state[1], self.current_turn, explored_percent,len(repeated_cells),self.bat_count,self.misssed_count]
+        
         return
     
     def filter_grthanzero(self, item):
@@ -136,12 +151,18 @@ class agent_dfs(agent_generic):
             
             unvisited_options = list(set(unvisited_options).difference(self.fired))
             unvisited_options.sort()
-            target = unvisited_options[0]
+            if(len(unvisited_options) > 0):
+                target = unvisited_options[0]
+            else:
+                target = unvisited_options
             self.fired.append(target)
             if(DEBUG): print(f'Shoot mode at {target}, fired at options: {unvisited_options}')
         else:
             mode = 'm'
-            target = unvisited_options[0]
+            if(len(unvisited_options) > 0):
+                target = unvisited_options[0]
+            else:
+                target = unvisited_options
             if(DEBUG): print(f'Move mode to {target}')
 
         self.visited.append(game_state[0])
@@ -158,12 +179,19 @@ class agent_bfs(agent_generic):
     """
     def __init__(self, game):
         super().__init__(game)
+        self.layered = {1 : [], 2 : [], 3 : [], 4 : [], 5 : []}
+        self.current_layer = 0
         self.visited = []
         self.fired = []
 
     def evaluate_gamestate(self, game_state):
         if(DEBUG): print(f'BFS eval of {game_state}')
-
+        
+        #have we explored all of the current layer?
+            #no
+                #go to the next room in the current layer
+            #yes
+                #move to next layer
         available_options = self.game.cave[game_state[0]]
         if(DEBUG): print(f'Available choices {available_options}')
         warnings = game_state[1]
@@ -198,7 +226,6 @@ class agent_bfs(agent_generic):
         self.visited.append(game_state[0])
         return mode, target
 
-
 class agent_simpleKB(agent_generic):
     """
     TODO
@@ -207,7 +234,63 @@ class agent_simpleKB(agent_generic):
     #Avoid pits
     #evaluate probability of threat @ location
 
+class human(agent_generic):
+    def __init__(self, game):
+        super().__init__(game)
+        print("*********GAME MAP*********")
+        print( """
+        21 22 23 24 25
+        16 17 18 19 20
+        11 12 13 14 15
+        06 07 08 09 10
+        01 02 03 04 05
+        """)
+    def evaluate_gamestate(self, game_state):
+        print("You are in room {}.".format(self.game.player_pos), end=" ")
+        print("Tunnels lead to:  {}".format(self.game.cave[self.game.player_pos]))
+        print(f"Modes = M(Move), S(Shoot), Q(Quit)")
+        return self.get_players_input()
+    
+    def get_players_input(self):
+        """ Queries input until valid input is given.
+        """
+        while 1:                               
+            human_input = input("Input: 'Mode Target'\n")
+            split_input = human_input.split(" ")
+            try:                                # Ensure that the player choses a valid action (shoot or move)
+                mode = split_input[0].lower()
+                assert mode in ['s', 'm', 'q', 'c']
 
+            except (ValueError, AssertionError):
+                print("This is not a valid action: pick 'S' to shoot and 'M' to move.")
+                continue
+
+            try:                                # Ensure that the chosen target is convertable to an integer.
+                target = int(split_input[1])
+            except ValueError:
+                print("This is not even a real number.")
+                continue
+
+            if mode == 'q':                            # I added a 'quit-button' for convenience.
+                return 'q', -1
+            
+            if mode == 'm':
+                try:                            # When walking, the target must be adjacent to the current room.
+                    assert target in self.game.cave[self.game.player_pos] or target == self.game.player_pos
+                    break
+                except AssertionError:
+                    print("You cannot walk that far. Please use one of the tunnels.")
+            elif mode == 's':
+                try:                            # When shooting, the target must be reachable within 1 tunnels.
+                    bfs = self.game.breadth_first_search(self.game.player_pos, target)
+                    assert bfs[0] == True
+                    assert bfs[1] < self.game.arrow_travel_distance
+                    break
+                except AssertionError:
+                    if bfs[1] > self.game.arrow_travel_distance:                # The target is too far.
+                        print("Arrows cant go that far.")
+        return mode, target
+    
 class agent_advancedKB(agent_generic):
     """
     TODO
