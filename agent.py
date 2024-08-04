@@ -19,7 +19,7 @@ class agent_generic():
         game_state = self.game.enter_room(self.current_position)
 
         while(True):
-            if(DEBUG): print(f'New Turn: {self.current_turn}, Game State: {game_state}')
+            if(DEBUG): print(f'----New Turn: {self.current_turn}, Game State: {game_state}----')
             if(game_state[0] == -1):
                 print("AGENT LOST GAME")
                 break
@@ -39,8 +39,12 @@ class agent_generic():
             #make the next move
             if mode == 'm':
                 game_state = self.game.enter_room(target)
+                self.game.player_pos = game_state[0]
             elif mode == 's':
                 game_state = self.game.shoot_room(target)
+            elif mode == 'q':
+                print("AGENT LOST GAME")
+                break
 
             self.current_turn = self.current_turn + 1
 
@@ -54,7 +58,12 @@ class agent_generic():
     
 class agent_dfs(agent_generic):
     """
-    TODO
+    DFS
+    YY YY YY YY YY
+    12 13 14 15 16
+    11 10 09 XX 17
+    06 07 08 01 18
+    05 04 03 02 19
     """
     def __init__(self, game):
         self.dataframe_score = pd.DataFrame()
@@ -75,24 +84,46 @@ class agent_dfs(agent_generic):
         unvisited_options.sort()
         if(DEBUG): print(f'Visited nodes {self.visited}, unvisited options: {unvisited_options}')
         #if we are near the wumpus shoot an arrow
-        if('wumpus' in warnings):
+        if(len(unvisited_options) < 1):
+            mode = 'q'
+            target = 0
+
+        elif('Missed' in warnings or 'bat' in warnings):
+            #We missed, reenter room to get the warnings
+            mode = 'm'
+            target = game_state[0]
+            if(DEBUG): print(f'Missed arrow. Re-entering room{target}')
+
+        elif('wumpus' in warnings):
             mode = 's'
             
             unvisited_options = list(set(unvisited_options).difference(self.fired))
             target = unvisited_options[0]
             self.fired.append(target)
-            # if(DEBUG): print(f'Shoot mode at {target}, fired at options: {self.fired}')
+            if(DEBUG): print(f'Shoot mode at {target}, fired at options: {self.fired}')
         else:
             mode = 'm'
             target = unvisited_options[0]
-            self.visited.append(game_state[0])
-            # if(DEBUG): print(f'Move mode to {target}')
+            if(DEBUG): print(f'Move mode to {target}')
 
+        self.visited.append(game_state[0])
         return mode, target
     
     def dfs_search(self, stack, visited):
         return
 
+class agent_bfs(agent_generic):
+    """
+    TODO
+    """
+    """
+    BFS
+    05 04 03 02 03
+    04 03 02 01 02
+    03 02 01 XX 01
+    04 03 02 01 02
+    05 04 03 02 03
+    """
 class agent_astar(agent_generic):
     """
     TODO
