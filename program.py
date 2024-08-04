@@ -48,7 +48,7 @@ if __name__ == '__main__':
                        ):
         print(final_results)
     print(final_results.describe(include='all'))
-
+    final_results.to_csv('DFS_Results.csv')
     print(f'\n-----------------------------------------------------------------\n')
 
     with pd.option_context('display.max_rows', None,
@@ -57,3 +57,4 @@ if __name__ == '__main__':
                        ):
         print(Human_final_results)
     print(Human_final_results.describe(include='all'))
+    Human_final_results.to_csv('Human_Results.csv')
