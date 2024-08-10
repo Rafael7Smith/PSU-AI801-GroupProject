@@ -48,9 +48,9 @@ if __name__ == '__main__':
                        'display.max_columns', None,
                        'display.precision', 1,
                        ):
-        print(final_results)
-    print(final_results.describe(include='all'))
-    final_results.to_csv('DFS_Results.csv')
+        print(dfs_results)
+    print(dfs_results.describe(include='all'))
+    dfs_results.to_csv('DFS_Results.csv')
 
     print(f'\n-----------------------------------------------------------------\n')
 
