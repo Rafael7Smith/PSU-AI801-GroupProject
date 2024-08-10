@@ -10,29 +10,31 @@ Arrows Fired
 Bats Encountered
 """
 
-if __name__ == '__main__':                        
-    # TODO: In the original game you can replay a dungeon (same positions of you and the threats)
+if __name__ == '__main__':
 
-    
-    # WG.gameloop()
+    # bfs_results = None
+    # WG = WumpusGame.WumpusGame(cave='square')
+    # agent_dfs = agent.agent_bfs(WG)
+    # results = agent_dfs.run_game()
 
-    # TODO:
-    final_results = None
-    for iter in range(100):
+    games = int(input("How many games should the DFS Type Agent play?\n"))                       
+    dfs_results = None
+    for iter in range(games):
         WG = WumpusGame.WumpusGame(cave='square')
         agent_dfs = agent.agent_dfs(WG)
         results = agent_dfs.run_game()
-        if(final_results is None):
-            final_results = results
+        if(dfs_results is None):
+            dfs_results = results
         else:
-            final_results = pd.concat([final_results, results], ignore_index=True)
+            dfs_results = pd.concat([dfs_results, results], ignore_index=True)
 
     print(f'-----------------------------------------------------------------\n')
     print(f'-----------------------------------------------------------------\n')
     print(f'-----------------------------------------------------------------\n')
 
     Human_final_results = None
-    for iter in range(2):
+    games = int(input("How many games would you like to play?\n"))
+    for iter in range(games):
         WG = WumpusGame.WumpusGame(cave='square')
         agent_dfs = agent.human(WG)
         results = agent_dfs.run_game()
@@ -49,6 +51,7 @@ if __name__ == '__main__':
         print(final_results)
     print(final_results.describe(include='all'))
     final_results.to_csv('DFS_Results.csv')
+
     print(f'\n-----------------------------------------------------------------\n')
 
     with pd.option_context('display.max_rows', None,
